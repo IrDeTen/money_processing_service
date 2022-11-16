@@ -1,4 +1,4 @@
-package postgresql
+package postgres
 
 type Repository struct {
 }

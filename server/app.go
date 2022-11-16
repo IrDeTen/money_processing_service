@@ -11,7 +11,7 @@ import (
 
 	"github.com/IrDeTen/money_processing_service.git/app"
 	apphttp "github.com/IrDeTen/money_processing_service.git/app/delivery/http"
-	"github.com/IrDeTen/money_processing_service.git/app/repo/postgresql"
+	"github.com/IrDeTen/money_processing_service.git/app/repo/postgres"
 	"github.com/IrDeTen/money_processing_service.git/app/usecase"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -25,7 +25,7 @@ type App struct {
 }
 
 func NewApp() *App {
-	repo := postgresql.NewRepo()
+	repo := postgres.NewRepo()
 	uc := usecase.NewUsecase(repo)
 	return &App{
 		uc:   uc,

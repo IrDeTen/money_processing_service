@@ -1,0 +1,12 @@
+release: false
+name: 'app-name'
+http_port: 8888
+log:
+  dir: 'logs'
+  file: 'app.log'
+db:
+  login: ''
+  pass: ''
+  host: ''
+  port: ''
+  name: ''
