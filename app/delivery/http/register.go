@@ -8,16 +8,22 @@ import (
 func RegisterHTTPEndpoints(router *gin.Engine, uc app.IUsecase) {
 	h := NewHandler(uc)
 
-	//TODO change endpoint name
-	apiEndpoints := router.Group("/api")
+	clientEndpoints := router.Group("/client")
 	{
-		apiEndpoints.POST("", h.CreateClient)
-		apiEndpoints.GET("", h.GetClient)
+		clientEndpoints.POST("", h.CreateClient)
+		clientEndpoints.GET(":clent_id", h.GetClient)
+	}
 
-		apiEndpoints.POST("", h.CreateAccount)
-		apiEndpoints.GET("", h.GetAccount)
+	accountEndpoints := router.Group("/account")
+	{
+		accountEndpoints.POST("", h.CreateAccount)
+		accountEndpoints.GET(":account_id", h.GetAccount)
 
-		apiEndpoints.POST("", h.CreateTransaction)
-		apiEndpoints.GET("", h.GetTransactions)
+	}
+
+	transactionEndpoints := router.Group("/transaction")
+	{
+		transactionEndpoints.POST("", h.CreateTransaction)
+		transactionEndpoints.GET(":account_id", h.GetTransactions)
 	}
 }
