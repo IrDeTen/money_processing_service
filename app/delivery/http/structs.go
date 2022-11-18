@@ -39,9 +39,7 @@ type newAccount struct {
 }
 
 func (nAcc newAccount) ToModel() models.Account {
-	return models.Account{
-		
-	}
+	return models.Account{}
 }
 
 type outAccount struct {
@@ -109,5 +107,6 @@ func (oTA outTransaction) FromModel(t models.Transaction) outTransaction {
 		SourceID: t.Source.GetID().String(),
 		TargetID: t.Target.GetID().String(),
 		Amount:   t.Amount,
+		Date:     t.CreationDate.String(),
 	}
 }
