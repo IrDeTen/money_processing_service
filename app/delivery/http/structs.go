@@ -21,14 +21,16 @@ type outClient struct {
 }
 
 func (oClient outClient) FromModel(client models.Client, accounts []models.Account) outClient {
-	oClient.ID = client.GetID().String()
-	oClient.Name = client.Name
-	oClient.Accounts = make([]outAccount, 0)
+	list := make([]outAccount, 0)
 	for _, acc := range accounts {
 		outAcc := outAccount.FromModel(outAccount{}, acc)
-		oClient.Accounts = append(oClient.Accounts, outAcc)
+		list = append(list, outAcc)
 	}
-	return oClient
+	return outClient{
+		ID:       client.GetID().String(),
+		Name:     client.Name,
+		Accounts: list,
+	}
 }
 
 type outAccount struct {
@@ -38,10 +40,11 @@ type outAccount struct {
 }
 
 func (oAcc outAccount) FromModel(acc models.Account) outAccount {
-	oAcc.ID = acc.GetID().String()
-	oAcc.Balance = acc.Balance
-	oAcc.Currency = outCurrency.FromModel(outCurrency{}, acc.Currency)
-	return oAcc
+	return outAccount{
+		ID:       acc.GetID().String(),
+		Currency: outCurrency.FromModel(outCurrency{}, acc.Currency),
+		Balance:  acc.Balance,
+	}
 }
 
 type outCurrency struct {
@@ -50,9 +53,10 @@ type outCurrency struct {
 }
 
 func (oCurrency outCurrency) FromModel(currency models.Currency) outCurrency {
-	oCurrency.ID = currency.ID
-	oCurrency.Code = currency.Code
-	return oCurrency
+	return outCurrency{
+		ID:   currency.ID,
+		Code: currency.Code,
+	}
 }
 
 type newTransaction struct {
@@ -62,10 +66,20 @@ type newTransaction struct {
 	Amount   decimal.Decimal `json:"amount"`
 }
 
-func (nTA newTransaction) ToModel() models.Transaction {
-	sourceID, _ := uuid.Parse(nTA.SourceID)
-	targetID, _ := uuid.Parse(nTA.TargetID)
-	return models.NewTransaction(nTA.TypeID, sourceID, targetID, nTA.Amount)
+func (nTA newTransaction) ToModel() (models.Transaction, error) {
+	var sourceID, targetID uuid.UUID
+	var err error
+
+	sourceID, err = uuid.Parse(nTA.SourceID)
+	if len(nTA.SourceID) > 0 && err != nil {
+		return models.Transaction{}, errInvalidAccountID
+	}
+
+	targetID, err = uuid.Parse(nTA.TargetID)
+	if len(nTA.TargetID) > 0 && err != nil {
+		return models.Transaction{}, errInvalidAccountID
+	}
+	return models.NewTransaction(nTA.TypeID, sourceID, targetID, nTA.Amount), nil
 }
 
 type outTransaction struct {
@@ -78,10 +92,11 @@ type outTransaction struct {
 }
 
 func (oTA outTransaction) FromModel(t models.Transaction) outTransaction {
-	oTA.ID = t.GetID().String()
-	oTA.Type = t.Type.Name
-	oTA.SourceID = t.Source.GetID().String()
-	oTA.TargetID = t.Target.GetID().String()
-	oTA.Amount = t.Amount
-	return oTA
+	return outTransaction{
+		ID:       t.GetID().String(),
+		Type:     t.Type.Name,
+		SourceID: t.Source.GetID().String(),
+		TargetID: t.Target.GetID().String(),
+		Amount:   t.Amount,
+	}
 }
