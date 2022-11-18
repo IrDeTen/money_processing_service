@@ -7,7 +7,7 @@ import (
 
 type IUsecase interface {
 	CreateClient(client models.Client) (clientID uuid.UUID, err error)
-	GetClient(clientID uuid.UUID) (client models.Client, err error)
+	GetClient(clientID uuid.UUID) (client models.Client, accounts []models.Account, err error)
 
 	CreateAccount(clientID uuid.UUID, currencyID uint) (accountID uuid.UUID, err error)
 	GetAccount(accountID uuid.UUID) (account models.Account, err error)

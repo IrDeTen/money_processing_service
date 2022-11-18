@@ -64,16 +64,11 @@ func (t *Transaction) GeneralChecksForTransactionType() error {
 }
 
 func (t *Transaction) Deposit() {
-	t.Target.Balance.Add(t.Amount)
+	t.Target.Deposit(t.Amount)
 }
 
 func (t *Transaction) Withdraw() error {
-	newBalance := t.Target.Balance.Sub(t.Amount)
-	if newBalance.IsNegative() {
-		return errInsufficientMoney
-	}
-	t.Source.Balance = newBalance
-	return nil
+	return t.Source.Withdraw(t.Amount)
 }
 
 func (t *Transaction) Transfer() error {

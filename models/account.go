@@ -24,7 +24,7 @@ func (a *Account) GetID() uuid.UUID {
 	return a.id
 }
 
-func (a *Account) Withdraw(currencyID uint, amount decimal.Decimal) error {
+func (a *Account) Withdraw(amount decimal.Decimal) error {
 	if a.Balance.Sub(amount).IsNegative() {
 		return errInsufficientMoney
 	}
@@ -32,6 +32,6 @@ func (a *Account) Withdraw(currencyID uint, amount decimal.Decimal) error {
 	return nil
 }
 
-func (a *Account) Deposit(currencyID uint, amount decimal.Decimal) {
+func (a *Account) Deposit(amount decimal.Decimal) {
 	a.Balance.Add(amount)
 }

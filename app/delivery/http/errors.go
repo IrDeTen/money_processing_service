@@ -1,7 +1,15 @@
 package http
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/gin-gonic/gin"
+)
 
 var (
 	errInvalidAccountID = errors.New("invalid account ID")
 )
+
+func (h *Handler) errResponse(c *gin.Context, code int, err error) {
+	c.JSON(code, map[string]interface{}{"status": "error", "error": err.Error()})
+}

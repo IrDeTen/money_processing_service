@@ -20,16 +20,27 @@ type outClient struct {
 	Accounts []outAccount `json:"accounts"`
 }
 
-func (oClient outClient) FromModel(client models.Client, accounts []models.Account) outClient {
+func (oClient *outClient) FromModel(client models.Client, accounts []models.Account) {
 	list := make([]outAccount, 0)
 	for _, acc := range accounts {
 		outAcc := outAccount.FromModel(outAccount{}, acc)
 		list = append(list, outAcc)
 	}
-	return outClient{
+	oClient = &outClient{
 		ID:       client.GetID().String(),
 		Name:     client.Name,
 		Accounts: list,
+	}
+}
+
+type newAccount struct {
+	ClientID   string `json:"client_id"`
+	CurrencyID uint   `json:"currency_id"`
+}
+
+func (nAcc newAccount) ToModel() models.Account {
+	return models.Account{
+		
 	}
 }
 

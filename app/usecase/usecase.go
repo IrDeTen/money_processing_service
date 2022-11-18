@@ -20,7 +20,7 @@ func (u *Usecase) CreateClient(client models.Client) (uuid.UUID, error) {
 	return client.GetID(), u.repo.CreateClient(&client)
 }
 
-func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, err error) {
+func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, accounts []models.Account, err error) {
 	client, err = u.repo.GetClient(clientID)
 	return
 }
