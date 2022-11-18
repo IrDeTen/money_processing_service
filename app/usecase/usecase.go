@@ -16,10 +16,8 @@ func NewUsecase(repo app.IRepository) *Usecase {
 	}
 }
 
-func (u *Usecase) CreateClient(name string) (uuid.UUID, error) {
-	client := models.CreateNewClient(name)
-	err := u.repo.CreateClient(&client)
-	return client.GetID(), err
+func (u *Usecase) CreateClient(client models.Client) (uuid.UUID, error) {
+	return client.GetID(), u.repo.CreateClient(&client)
 }
 
 func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, err error) {

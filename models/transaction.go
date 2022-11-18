@@ -27,7 +27,7 @@ type Transaction struct {
 	CreationDate time.Time
 }
 
-func NewTransaction() Transaction {
+func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.Decimal) Transaction {
 	return Transaction{
 		id:           uuid.New(),
 		CreationDate: time.Now(),
