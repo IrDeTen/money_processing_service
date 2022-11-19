@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -11,10 +13,13 @@ import (
 
 	"github.com/IrDeTen/money_processing_service.git/app"
 	apphttp "github.com/IrDeTen/money_processing_service.git/app/delivery/http"
-	"github.com/IrDeTen/money_processing_service.git/app/repo/postgres"
-	"github.com/IrDeTen/money_processing_service.git/app/usecase"
+	appRepo "github.com/IrDeTen/money_processing_service.git/app/repo/postgres"
+	appUC "github.com/IrDeTen/money_processing_service.git/app/usecase"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // required
 	"github.com/spf13/viper"
 )
 
@@ -25,8 +30,9 @@ type App struct {
 }
 
 func NewApp() *App {
-	repo := postgres.NewRepo()
-	uc := usecase.NewUsecase(repo)
+	db := initDB()
+	repo := appRepo.NewRepo(db)
+	uc := appUC.NewUsecase(repo)
 	return &App{
 		uc:   uc,
 		repo: repo,
@@ -36,7 +42,7 @@ func NewApp() *App {
 func (a *App) Run(port string) error {
 	defer a.repo.Close()
 	//TODO change gin mod
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 	router := gin.New()
 	router.Use(
 		gin.RecoveryWithWriter( /*TODO add logger*/ nil),
@@ -77,6 +83,44 @@ func (a *App) Run(port string) error {
 	return a.httpServer.Shutdown(ctx)
 }
 
-//TODO add init db
+// TODO add init db
+func initDB() *sql.DB {
+	dbString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		viper.GetString("app.db.host"),
+		viper.GetString("app.db.port"),
+		viper.GetString("app.db.login"),
+		viper.GetString("app.db.pass"),
+		viper.GetString("app.db.name"),
+	)
+	db, err := sql.Open(
+		"postgres",
+		dbString,
+	)
+	if err != nil {
+		panic(err)
+	}
+	runMigrations(db)
+	return db
+}
 
-//TODO add run migrations
+// TODO add run migrations
+func runMigrations(db *sql.DB) {
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://migrations",
+		viper.GetString("app.db.name"),
+		driver)
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange && err != migrate.ErrNilVersion {
+		fmt.Println(err)
+	}
+}
