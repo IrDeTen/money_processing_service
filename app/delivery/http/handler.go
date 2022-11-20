@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/IrDeTen/money_processing_service.git/app"
@@ -48,6 +49,8 @@ func (h *Handler) GetClient(c *gin.Context) {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
+	fmt.Println(mClient)
+	fmt.Println(accounts)
 	oClient.FromModel(mClient, accounts)
 	c.JSON(http.StatusOK, map[string]interface{}{"client": oClient})
 
@@ -124,7 +127,7 @@ func (h *Handler) GetTransactions(c *gin.Context) {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
-	
+
 	list := make([]outTransaction, 0)
 	for _, val := range transactions {
 		list = append(list, outTransaction.FromModel(outTransaction{}, val))

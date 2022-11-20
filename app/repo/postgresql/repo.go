@@ -41,7 +41,7 @@ func (r *Repository) CreateClient(mClient models.Client) (id uuid.UUID, err erro
 
 func (r *Repository) GetClient(clientID uuid.UUID) (client models.Client, err error) {
 	var dbClient dbClient
-	query := "SELECT * FROM client WHERE id=$1"
+	query := "SELECT * FROM clients WHERE id=$1"
 	if err = r.db.Get(&dbClient, query, clientID); err != nil {
 		logger.LogError(
 			"get client",

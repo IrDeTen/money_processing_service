@@ -22,6 +22,14 @@ func (u *Usecase) CreateClient(client models.Client) (uuid.UUID, error) {
 
 func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, accounts []models.Account, err error) {
 	client, err = u.repo.GetClient(clientID)
+	if err != nil {
+		err = errClientCreationFailed
+		return
+	}
+	accounts, err = u.repo.GetAccountsByClientID(clientID)
+	if err != nil {
+		return
+	}
 	return
 }
 
