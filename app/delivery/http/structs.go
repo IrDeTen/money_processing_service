@@ -84,7 +84,7 @@ func (c converter) NewTransactionToModel(transaction newTransaction) (models.Tra
 	if len(transaction.TargetID) > 0 && err != nil {
 		return models.Transaction{}, errInvalidAccountID
 	}
-	return models.NewTransaction(transaction.TypeID, sourceID, targetID, transaction.Amount), nil
+	return models.NewTransaction(transaction.TypeID, sourceID, targetID, transaction.Amount)
 }
 
 type outTransaction struct {

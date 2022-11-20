@@ -133,6 +133,23 @@ func (r *Repository) GetAccountsByClientID(clientID uuid.UUID) (accounts []model
 	return
 }
 
+func (r *Repository) GetCurrencyByID(currencyID uint) (currency models.Currency, err error) {
+	var curr dbCurrency
+	query := `SELECT * FROM currencies WHERE id =$1`
+	if err = r.db.Get(&curr, query, currencyID); err != nil {
+		logger.LogError(
+			"get currency",
+			"app/repo/postgres/repo",
+			"GetCurrencyByID",
+			fmt.Sprintf("currency id: %d", currencyID),
+			err)
+		return
+	}
+	currency = r.converter.CurrencyToModel(curr)
+	return
+
+}
+
 // Updating the balances of the specified accounts and creating a record of the transaction in the database
 func (r *Repository) CreateTransaction(transaction models.Transaction, accounts ...models.Account) (id uuid.UUID, err error) {
 	tx, err := r.db.Beginx()
@@ -146,6 +163,7 @@ func (r *Repository) CreateTransaction(transaction models.Transaction, accounts 
 			err)
 		return
 	}
+
 	for _, account := range accounts {
 		if err = r.updateBalance(tx, account); err != nil {
 			return
@@ -159,6 +177,7 @@ func (r *Repository) CreateTransaction(transaction models.Transaction, accounts 
 	return
 }
 
+// Update balance of the specified account in the database. Rolls back the transaction if errors occur in the process.
 func (r *Repository) updateBalance(tx *sqlx.Tx, account models.Account) (err error) {
 	var dbAccount dbAccount
 	dbAccount, err = r.converter.AccountFromModel(account)
@@ -188,6 +207,7 @@ func (r *Repository) updateBalance(tx *sqlx.Tx, account models.Account) (err err
 	return
 }
 
+// Records a transaction between clients in the database. Rolls back the database transaction if errors occur in the process.
 func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transaction) (id uuid.UUID, err error) {
 	dbTA := r.converter.TransactionFromModel(transaction)
 	query := `INSERT INTO transactions(type_id, source_id, target_id, amount, creation_date) 
@@ -219,7 +239,6 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 	}
 	return
 }
-
 
 func (r *Repository) GetTransactionsByAccount(accountID uuid.UUID) (transactions []models.Transaction, err error) {
 	dbTAList := make([]dbTransaction, 0)

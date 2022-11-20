@@ -13,6 +13,8 @@ type IRepository interface {
 	GetAccountByID(accountID uuid.UUID) (account models.Account, err error)
 	GetAccountsByClientID(clientID uuid.UUID) (accounts []models.Account, err error)
 
+	GetCurrencyByID(currencyID uint) (currency models.Currency, err error)
+
 	CreateTransaction(transaction models.Transaction, accounts ...models.Account) (id uuid.UUID, err error)
 	GetTransactionsByAccount(accountID uuid.UUID) (transactions []models.Transaction, err error)
 

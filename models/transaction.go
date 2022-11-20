@@ -9,14 +9,10 @@ import (
 )
 
 var (
-	errInsufficientMoney         = errors.New("insufficient money in the account")
-	errInvalidTransactionType    = errors.New("invalid transaction type")
-	errInvalidAccountForDeposit  = errors.New("invalid account for deposit")
-	errInvalidAccountForWithdraw = errors.New("invalid account for withdraw")
-	errInvalidAccountForTransfer = errors.New("invalid account for transfer")
-	errSameAccount               = errors.New("the same account for the transfer is specified")
-	errDifferentCurrencies       = errors.New("accounts with different currencies")
-	errIvalidTransactionUUID     = errors.New("invalid id for transaction")
+	errZeroValueTransaction  = errors.New("zero-value transaction")
+	errInsufficientMoney     = errors.New("insufficient money in the account")
+	errDifferentCurrencies   = errors.New("accounts with different currencies")
+	errIvalidTransactionUUID = errors.New("invalid id for transaction")
 )
 
 type Transaction struct {
@@ -28,7 +24,7 @@ type Transaction struct {
 	CreationDate time.Time
 }
 
-func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.Decimal) Transaction {
+func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.Decimal) (t Transaction, err error) {
 	var source, target Account
 	if sourceID != uuid.Nil {
 		source.SetID(sourceID)
@@ -36,7 +32,10 @@ func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.De
 	if targetID != uuid.Nil {
 		target.SetID(targetID)
 	}
-	return Transaction{
+	if amount.LessThanOrEqual(decimal.Zero) {
+		return t, errZeroValueTransaction
+	}
+	t = Transaction{
 		Type: TransactionType{
 			ID: typeID,
 		},
@@ -45,6 +44,7 @@ func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.De
 		Target:       target,
 		CreationDate: time.Now(),
 	}
+	return
 }
 
 func (t *Transaction) GetID() uuid.UUID {
@@ -59,39 +59,17 @@ func (t *Transaction) SetID(id uuid.UUID) error {
 	return nil
 }
 
-func (t *Transaction) GeneralChecksForTransactionType() error {
-	switch t.Type.ID {
-	case Deposit.ID:
-		if t.Target.GetID() == uuid.Nil || t.Source.GetID() != uuid.Nil {
-			return errInvalidAccountForDeposit
-		}
-
-	case Withdraw.ID:
-		if t.Source.GetID() == uuid.Nil || t.Target.GetID() != uuid.Nil {
-			return errInvalidAccountForWithdraw
-		}
-
-	case Transfer.ID:
-		if t.Source.GetID() == uuid.Nil || t.Target.GetID() == uuid.Nil {
-			return errInvalidAccountForTransfer
-		}
-		if t.Source.GetID() == t.Target.GetID() {
-			return errSameAccount
-		}
-	default:
-		return errInvalidTransactionType
-	}
-	return nil
-}
-
+// The method is used to calculate the new account balance when making a deposit
 func (t *Transaction) Deposit() {
 	t.Target.Deposit(t.Amount)
 }
 
+// The method is used to calculate the new account balance when withdrawing
 func (t *Transaction) Withdraw() error {
 	return t.Source.Withdraw(t.Amount)
 }
 
+// The method is used to calculate the new balance of accounts during the transfer
 func (t *Transaction) Transfer() error {
 	if t.Source.Currency != t.Target.Currency {
 		return errDifferentCurrencies
@@ -100,14 +78,17 @@ func (t *Transaction) Transfer() error {
 	return t.Withdraw()
 }
 
+// Returns true if transaction type is deposit
 func (t *Transaction) IsDeposit() bool {
 	return t.Type.ID == Deposit.ID
 }
 
+// Returns true if transaction type is withdraw
 func (t *Transaction) IsWithdraw() bool {
 	return t.Type.ID == Withdraw.ID
 }
 
+// Returns true if transaction type is transfer
 func (t *Transaction) IsTransfer() bool {
 	return t.Type.ID == Transfer.ID
 }
