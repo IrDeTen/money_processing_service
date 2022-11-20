@@ -6,12 +6,14 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type converter struct{}
+
 type newClient struct {
 	Name string `json:"name"`
 }
 
-func (nClient newClient) ToModel() models.Client {
-	return models.CreateNewClient(nClient.Name)
+func (c converter) ClientToModel(client newClient) models.Client {
+	return models.CreateNewClient(client.Name)
 }
 
 type outClient struct {
@@ -20,13 +22,12 @@ type outClient struct {
 	Accounts []outAccount `json:"accounts"`
 }
 
-func (oClient *outClient) FromModel(client models.Client, accounts []models.Account) {
+func (c converter) ClientFromModel(client models.Client, accounts []models.Account) outClient {
 	list := make([]outAccount, 0)
-	for _, acc := range accounts {
-		outAcc := outAccount.FromModel(outAccount{}, acc)
-		list = append(list, outAcc)
+	for _, account := range accounts {
+		list = append(list, c.AccountFromModel(account))
 	}
-	oClient = &outClient{
+	return outClient{
 		ID:       client.GetID().String(),
 		Name:     client.Name,
 		Accounts: list,
@@ -38,21 +39,17 @@ type newAccount struct {
 	CurrencyID uint   `json:"currency_id"`
 }
 
-func (nAcc newAccount) ToModel() models.Account {
-	return models.Account{}
-}
-
 type outAccount struct {
 	ID       string          `json:"id"`
 	Currency outCurrency     `json:"currency"`
 	Balance  decimal.Decimal `json:"balance"`
 }
 
-func (oAcc outAccount) FromModel(acc models.Account) outAccount {
+func (c converter) AccountFromModel(account models.Account) outAccount {
 	return outAccount{
-		ID:       acc.GetID().String(),
-		Currency: outCurrency.FromModel(outCurrency{}, acc.Currency),
-		Balance:  acc.Balance,
+		ID:       account.GetID().String(),
+		Currency: c.CurrencyFromModel(account.Currency),
+		Balance:  account.Balance,
 	}
 }
 
@@ -61,7 +58,7 @@ type outCurrency struct {
 	Code string `json:"code"`
 }
 
-func (oCurrency outCurrency) FromModel(currency models.Currency) outCurrency {
+func (c converter) CurrencyFromModel(currency models.Currency) outCurrency {
 	return outCurrency{
 		ID:   currency.ID,
 		Code: currency.Code,
@@ -75,20 +72,19 @@ type newTransaction struct {
 	Amount   decimal.Decimal `json:"amount"`
 }
 
-func (nTA newTransaction) ToModel() (models.Transaction, error) {
+func (c converter) NewTransactionToModel(transaction newTransaction) (models.Transaction, error) {
 	var sourceID, targetID uuid.UUID
 	var err error
-
-	sourceID, err = uuid.Parse(nTA.SourceID)
-	if len(nTA.SourceID) > 0 && err != nil {
+	sourceID, err = uuid.Parse(transaction.SourceID)
+	if len(transaction.SourceID) > 0 && err != nil {
 		return models.Transaction{}, errInvalidAccountID
 	}
 
-	targetID, err = uuid.Parse(nTA.TargetID)
-	if len(nTA.TargetID) > 0 && err != nil {
+	targetID, err = uuid.Parse(transaction.TargetID)
+	if len(transaction.TargetID) > 0 && err != nil {
 		return models.Transaction{}, errInvalidAccountID
 	}
-	return models.NewTransaction(nTA.TypeID, sourceID, targetID, nTA.Amount), nil
+	return models.NewTransaction(transaction.TypeID, sourceID, targetID, transaction.Amount), nil
 }
 
 type outTransaction struct {
@@ -100,13 +96,13 @@ type outTransaction struct {
 	Date     string          `json:"date"`
 }
 
-func (oTA outTransaction) FromModel(t models.Transaction) outTransaction {
+func (c converter) TransactionFromModel(transaction models.Transaction) outTransaction {
 	return outTransaction{
-		ID:       t.GetID().String(),
-		Type:     t.Type.Name,
-		SourceID: t.Source.GetID().String(),
-		TargetID: t.Target.GetID().String(),
-		Amount:   t.Amount,
-		Date:     t.CreationDate.String(),
+		ID:       transaction.GetID().String(),
+		Type:     transaction.Type.Name,
+		SourceID: transaction.Source.GetID().String(),
+		TargetID: transaction.Target.GetID().String(),
+		Amount:   transaction.Amount,
+		Date:     transaction.CreationDate.String(),
 	}
 }

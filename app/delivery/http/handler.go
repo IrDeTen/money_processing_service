@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/IrDeTen/money_processing_service.git/app"
@@ -10,7 +9,8 @@ import (
 )
 
 type Handler struct {
-	uc app.IUsecase
+	uc        app.IUsecase
+	converter converter
 }
 
 func NewHandler(uc app.IUsecase) *Handler {
@@ -27,7 +27,7 @@ func (h *Handler) CreateClient(c *gin.Context) {
 		return
 	}
 
-	id, err := h.uc.CreateClient(client.ToModel())
+	id, err := h.uc.CreateClient(h.converter.ClientToModel(client))
 	if err != nil {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
@@ -36,7 +36,6 @@ func (h *Handler) CreateClient(c *gin.Context) {
 }
 
 func (h *Handler) GetClient(c *gin.Context) {
-	var oClient outClient
 	clientID := c.Param("client_id")
 	id, err := uuid.Parse(clientID)
 	if err != nil {
@@ -49,9 +48,7 @@ func (h *Handler) GetClient(c *gin.Context) {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println(mClient)
-	fmt.Println(accounts)
-	oClient.FromModel(mClient, accounts)
+	oClient := h.converter.ClientFromModel(mClient, accounts)
 	c.JSON(http.StatusOK, map[string]interface{}{"client": oClient})
 
 }
@@ -90,17 +87,17 @@ func (h *Handler) GetAccount(c *gin.Context) {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
-	outAcc := outAccount.FromModel(outAccount{}, account)
+	outAcc := h.converter.AccountFromModel(account)
 	c.JSON(http.StatusOK, map[string]interface{}{"account": outAcc})
 }
 
 func (h *Handler) CreateTransaction(c *gin.Context) {
-	var ta newTransaction
-	if err := c.BindJSON(&ta); err != nil {
+	var t newTransaction
+	if err := c.BindJSON(&t); err != nil {
 		h.errResponse(c, http.StatusBadRequest, err)
 		return
 	}
-	transaction, err := ta.ToModel()
+	transaction, err := h.converter.NewTransactionToModel(t)
 	if err != nil {
 		h.errResponse(c, http.StatusBadRequest, err)
 		return
@@ -130,7 +127,7 @@ func (h *Handler) GetTransactions(c *gin.Context) {
 
 	list := make([]outTransaction, 0)
 	for _, val := range transactions {
-		list = append(list, outTransaction.FromModel(outTransaction{}, val))
+		list = append(list, h.converter.TransactionFromModel(val))
 	}
 	c.JSON(http.StatusOK, map[string]interface{}{"transactions": list})
 }
