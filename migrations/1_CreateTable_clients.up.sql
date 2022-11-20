@@ -1,4 +1,4 @@
 CREATE TABLE IF NOT EXISTS clients (
-  id uuid PRIMARY KEY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name CHARACTER VARYING(30) NOT NULL
 );

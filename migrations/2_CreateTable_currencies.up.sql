@@ -1,11 +1,11 @@
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS currencys (
+CREATE TABLE IF NOT EXISTS currencies (
   id SERIAL PRIMARY KEY,
   code CHARACTER VARYING(30) NOT NULL
 );
 
-INSERT INTO currencys (id, code) VALUES 
+INSERT INTO currencies (id, code) VALUES 
 (1, 'USD'),
 (2, 'COP'),
 (3, 'MXN');

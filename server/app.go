@@ -13,7 +13,7 @@ import (
 
 	"github.com/IrDeTen/money_processing_service.git/app"
 	apphttp "github.com/IrDeTen/money_processing_service.git/app/delivery/http"
-	appRepo "github.com/IrDeTen/money_processing_service.git/app/repo/postgres"
+	appRepo "github.com/IrDeTen/money_processing_service.git/app/repo/postgresql"
 	appUC "github.com/IrDeTen/money_processing_service.git/app/usecase"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -41,11 +41,14 @@ func NewApp() *App {
 
 func (a *App) Run(port string) error {
 	defer a.repo.Close()
-	//TODO change gin mod
-	gin.SetMode(gin.DebugMode)
 	router := gin.New()
+	if viper.GetBool("app.release") {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		router.Use(gin.Logger())
+	}
 	router.Use(
-		gin.RecoveryWithWriter( /*TODO add logger*/ nil),
+		gin.Recovery(),
 	)
 
 	if viper.GetBool("app.client.use") {
@@ -83,7 +86,6 @@ func (a *App) Run(port string) error {
 	return a.httpServer.Shutdown(ctx)
 }
 
-// TODO add init db
 func initDB() *sql.DB {
 	dbString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		viper.GetString("app.db.host"),
@@ -103,7 +105,6 @@ func initDB() *sql.DB {
 	return db
 }
 
-// TODO add run migrations
 func runMigrations(db *sql.DB) {
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})

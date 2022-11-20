@@ -6,13 +6,14 @@ import (
 )
 
 type IRepository interface {
-	CreateClient(client *models.Client) error
+	CreateClient(client models.Client) (id uuid.UUID, err error)
 	GetClient(clientID uuid.UUID) (client models.Client, err error)
 
-	CreateAccount(clientID uuid.UUID, account *models.Account) error
+	CreateAccount(account models.Account) (id uuid.UUID, err error)
 	GetAccountByID(accountID uuid.UUID) (account models.Account, err error)
+	GetAccountsByClientID(clientID uuid.UUID) (accounts []models.Account, err error)
 
-	CreateTransaction(transaction *models.Transaction) error
+	CreateTransaction(transaction models.Transaction, accounts ...models.Account) (id uuid.UUID, err error)
 	GetTransactionsByAccount(accountID uuid.UUID) (transactions []models.Transaction, err error)
 
 	Close() error

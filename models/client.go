@@ -1,6 +1,14 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
+
+var (
+	errInvalidClientUUID = errors.New("invalid id for client")
+)
 
 type Client struct {
 	id   uuid.UUID
@@ -9,11 +17,18 @@ type Client struct {
 
 func CreateNewClient(name string) Client {
 	return Client{
-		id:   uuid.New(),
 		Name: name,
 	}
 }
 
 func (c *Client) GetID() uuid.UUID {
 	return c.id
+}
+
+func (c *Client) SetID(id uuid.UUID) error {
+	if id == uuid.Nil {
+		return errInvalidClientUUID
+	}
+	c.id = id
+	return nil
 }

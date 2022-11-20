@@ -16,6 +16,7 @@ var (
 	errInvalidAccountForTransfer = errors.New("invalid account for transfer")
 	errSameAccount               = errors.New("the same account for the transfer is specified")
 	errDifferentCurrencies       = errors.New("accounts with different currencies")
+	errIvalidTransactionUUID     = errors.New("invalid id for transaction")
 )
 
 type Transaction struct {
@@ -29,13 +30,20 @@ type Transaction struct {
 
 func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.Decimal) Transaction {
 	return Transaction{
-		id:           uuid.New(),
 		CreationDate: time.Now(),
 	}
 }
 
 func (t *Transaction) GetID() uuid.UUID {
 	return t.id
+}
+
+func (t *Transaction) SetID(id uuid.UUID) error {
+	if id == uuid.Nil {
+		return errIvalidTransactionUUID
+	}
+	t.id = id
+	return nil
 }
 
 func (t *Transaction) GeneralChecksForTransactionType() error {

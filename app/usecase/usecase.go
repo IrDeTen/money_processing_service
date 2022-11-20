@@ -17,7 +17,7 @@ func NewUsecase(repo app.IRepository) *Usecase {
 }
 
 func (u *Usecase) CreateClient(client models.Client) (uuid.UUID, error) {
-	return client.GetID(), u.repo.CreateClient(&client)
+	return u.repo.CreateClient(client)
 }
 
 func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, accounts []models.Account, err error) {
@@ -26,9 +26,11 @@ func (u *Usecase) GetClient(clientID uuid.UUID) (client models.Client, accounts 
 }
 
 func (u *Usecase) CreateAccount(clientID uuid.UUID, currencyID uint) (uuid.UUID, error) {
-	account := models.CreateNewAccount(currencyID)
-	err := u.repo.CreateAccount(clientID, &account)
-	return account.GetID(), err
+	account, err := models.CreateNewAccount(clientID, currencyID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return u.repo.CreateAccount(account)
 }
 
 func (u *Usecase) GetAccount(accountID uuid.UUID) (account models.Account, err error) {
@@ -39,53 +41,61 @@ func (u *Usecase) CreateTransaction(transaction models.Transaction) (transaction
 	if err = transaction.GeneralChecksForTransactionType(); err != nil {
 		return
 	}
-	if transaction.IsDeposit() {
-		if err = u.deposit(transaction); err != nil {
+	switch {
+	case transaction.IsDeposit():
+		var account models.Account
+		if account, err = u.deposit(&transaction); err != nil {
 			return
 		}
-	}
-	if transaction.IsWithdraw() {
-		if err = u.withdraw(transaction); err != nil {
+		return u.repo.CreateTransaction(transaction, account)
+	case transaction.IsWithdraw():
+		var account models.Account
+		if account, err = u.withdraw(&transaction); err != nil {
 			return
 		}
-	}
-	if transaction.IsTransfer() {
-		if err = u.transfer(transaction); err != nil {
+		return u.repo.CreateTransaction(transaction, account)
+	case transaction.IsTransfer():
+		var accounts []models.Account
+		if accounts, err = u.transfer(&transaction); err != nil {
 			return
 		}
+		return u.repo.CreateTransaction(transaction, accounts...)
 	}
-	return transaction.GetID(), u.repo.CreateTransaction(&transaction)
+
+	return uuid.UUID{}, errInvalidTransactionType
 }
 
-func (u *Usecase) deposit(t models.Transaction) (err error) {
+func (u *Usecase) deposit(t *models.Transaction) (account models.Account, err error) {
 	if t.Target, err = u.repo.GetAccountByID(t.Target.GetID()); err != nil {
-		return errAccountDoesntExist
+		return models.Account{}, errAccountDoesntExist
 	}
 	t.Deposit()
-	return nil
+	return t.Target, nil
 }
 
-func (u *Usecase) withdraw(t models.Transaction) (err error) {
+func (u *Usecase) withdraw(t *models.Transaction) (account models.Account, err error) {
 	if t.Source, err = u.repo.GetAccountByID(t.Source.GetID()); err != nil {
-		return errAccountDoesntExist
+		return models.Account{}, errAccountDoesntExist
 	}
 	if err = t.Withdraw(); err != nil {
 		return
 	}
-	return nil
+	return t.Source, nil
 }
 
-func (u *Usecase) transfer(t models.Transaction) (err error) {
+func (u *Usecase) transfer(t *models.Transaction) (accounts []models.Account, err error) {
 	if t.Target, err = u.repo.GetAccountByID(t.Target.GetID()); err != nil {
-		return errAccountDoesntExist
+		return nil, errAccountDoesntExist
 	}
+	accounts = append(accounts, t.Target)
 	if t.Source, err = u.repo.GetAccountByID(t.Source.GetID()); err != nil {
-		return errAccountDoesntExist
+		return nil, errAccountDoesntExist
 	}
+	accounts = append(accounts, t.Source)
 	if err = t.Transfer(); err != nil {
 		return
 	}
-	return nil
+	return
 }
 
 func (u *Usecase) GetTransactions(accountID uuid.UUID) (list []models.Transaction, err error) {

@@ -20,12 +20,13 @@ func InitLogger(logDir, logFile string) {
 }
 
 // LogError log it
-func LogError(action, file, data string, err error) {
+func LogError(action, file, function, data string, err error) {
 	logrus.WithFields(
 		logrus.Fields{
-			"action": action,
-			"file":   file,
-			"data":   data,
+			"action":   action,
+			"file":     file,
+			"function": function,
+			"data":     data,
 		},
 	).Error(err)
 }
