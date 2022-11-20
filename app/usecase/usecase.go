@@ -95,14 +95,13 @@ func (u *Usecase) transfer(t *models.Transaction) (accounts []models.Account, er
 	if t.Target, err = u.repo.GetAccountByID(t.Target.GetID()); err != nil {
 		return nil, errAccountDoesntExist
 	}
-	accounts = append(accounts, t.Target)
 	if t.Source, err = u.repo.GetAccountByID(t.Source.GetID()); err != nil {
 		return nil, errAccountDoesntExist
 	}
-	accounts = append(accounts, t.Source)
 	if err = t.Transfer(); err != nil {
 		return
 	}
+	accounts = append(accounts, t.Target, t.Source)
 	return
 }
 

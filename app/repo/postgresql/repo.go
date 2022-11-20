@@ -200,7 +200,7 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 			"app/repo/postgres/repo",
 			"writeTransaction",
 			fmt.Sprintf("transaction type id: %d, source account id: %s, target account id: %s",
-				dbTA.TypeID, dbTA.SourceID, dbTA.TargetID),
+				dbTA.TypeID, dbTA.SourceID.String, dbTA.TargetID.String),
 			err)
 		tx.Rollback()
 		return
@@ -212,7 +212,7 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 			"app/repo/postgres/repo",
 			"writeTransaction",
 			fmt.Sprintf("transaction type id: %d, source account id: %s, target account id: %s",
-				dbTA.TypeID, dbTA.SourceID, dbTA.TargetID),
+				dbTA.TypeID, dbTA.SourceID.String, dbTA.TargetID.String),
 			err)
 		tx.Rollback()
 		return

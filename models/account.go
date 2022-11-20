@@ -48,10 +48,10 @@ func (a *Account) Withdraw(amount decimal.Decimal) error {
 	if a.Balance.Sub(amount).IsNegative() {
 		return errInsufficientMoney
 	}
-	a.Balance.Sub(amount)
+	a.Balance = a.Balance.Sub(amount)
 	return nil
 }
 
 func (a *Account) Deposit(amount decimal.Decimal) {
-	a.Balance.Add(amount)
+	a.Balance = a.Balance.Add(amount)
 }

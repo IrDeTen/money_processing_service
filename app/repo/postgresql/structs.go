@@ -108,7 +108,7 @@ func (c converter) TransactionFromModel(mTA models.Transaction) (dbTA dbTransact
 	if mTA.Target.GetID() != uuid.Nil {
 		dbTA.TargetID = sql.NullString{
 			Valid:  true,
-			String: mTA.Source.GetID().String(),
+			String: mTA.Target.GetID().String(),
 		}
 	}
 	dbTA.CreationDate = mTA.CreationDate
