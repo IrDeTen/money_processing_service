@@ -21,3 +21,11 @@ var (
 		Name: "Transfer",
 	}
 )
+
+var (
+	transactionTypeMap = map[uint]TransactionType{
+		Deposit.ID:  Deposit,
+		Withdraw.ID: Withdraw,
+		Transfer.ID: Transfer,
+	}
+)

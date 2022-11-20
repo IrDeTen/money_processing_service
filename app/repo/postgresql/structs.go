@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 
@@ -32,10 +33,11 @@ func (c converter) ClientToModel(dbClient dbClient) (mClient models.Client) {
 }
 
 type dbAccount struct {
-	ID         uuid.UUID       `db:"id"`
-	ClientID   uuid.UUID       `db:"client_id"`
-	CurrencyID uint            `db:"currency_id"`
-	Balance    decimal.Decimal `db:"balance"`
+	ID           uuid.UUID       `db:"id"`
+	ClientID     uuid.UUID       `db:"client_id"`
+	CurrencyID   uint            `db:"currency_id"`
+	CurrencyCode string          `db:"currency_code"`
+	Balance      decimal.Decimal `db:"balance"`
 }
 
 func (c converter) AccountFromModel(mAcc models.Account) (dbAcc dbAccount, err error) {
@@ -62,6 +64,7 @@ func (c converter) AccountToModel(dbAcc dbAccount) (mAcc models.Account) {
 		mAcc.Client.SetID(dbAcc.ClientID)
 	}
 	mAcc.Currency.ID = dbAcc.CurrencyID
+	mAcc.Currency.Code = dbAcc.CurrencyCode
 	mAcc.Balance = dbAcc.Balance
 	return
 }
@@ -84,12 +87,12 @@ func (c converter) CurrencyToModel(dbCurr dbCurrency) (mCurr models.Currency) {
 }
 
 type dbTransaction struct {
-	ID           uuid.UUID       `json:"id"`
-	TypeID       uint            `json:"type_id"`
-	Amount       decimal.Decimal `json:"amount"`
-	SourceID     uuid.UUID       `json:"source_id"`
-	TargetID     uuid.UUID       `json:"target_id"`
-	CreationDate time.Time       `json:"creation_date"`
+	ID           uuid.UUID       `db:"id"`
+	TypeID       uint            `db:"type_id"`
+	Amount       decimal.Decimal `db:"amount"`
+	SourceID     sql.NullString  `db:"source_id"`
+	TargetID     sql.NullString  `db:"target_id"`
+	CreationDate time.Time       `db:"creation_date"`
 }
 
 func (c converter) TransactionFromModel(mTA models.Transaction) (dbTA dbTransaction) {
@@ -97,10 +100,16 @@ func (c converter) TransactionFromModel(mTA models.Transaction) (dbTA dbTransact
 		dbTA.ID = mTA.GetID()
 	}
 	if mTA.Source.GetID() != uuid.Nil {
-		dbTA.SourceID = mTA.Source.GetID()
+		dbTA.SourceID = sql.NullString{
+			Valid:  true,
+			String: mTA.Source.GetID().String(),
+		}
 	}
 	if mTA.Target.GetID() != uuid.Nil {
-		dbTA.TargetID = mTA.Target.GetID()
+		dbTA.TargetID = sql.NullString{
+			Valid:  true,
+			String: mTA.Source.GetID().String(),
+		}
 	}
 	dbTA.CreationDate = mTA.CreationDate
 	dbTA.Amount = mTA.Amount
@@ -110,9 +119,15 @@ func (c converter) TransactionFromModel(mTA models.Transaction) (dbTA dbTransact
 
 func (c converter) TransactionToModel(dbTA dbTransaction) (mTA models.Transaction) {
 	mTA.SetID(dbTA.ID)
-	mTA.Source.SetID(dbTA.SourceID)
-	mTA.Target.SetID(dbTA.TargetID)
-	mTA.Type.ID = dbTA.TypeID
+	if dbTA.SourceID.Valid {
+		sourceID, _ := uuid.Parse(dbTA.SourceID.String)
+		mTA.Source.SetID(sourceID)
+	}
+	if dbTA.TargetID.Valid {
+		targetID, _ := uuid.Parse(dbTA.TargetID.String)
+		mTA.Target.SetID(targetID)
+	}
+	mTA.SetType(dbTA.TypeID)
 	mTA.Amount = dbTA.Amount
 	mTA.CreationDate = dbTA.CreationDate
 	return

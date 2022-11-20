@@ -29,7 +29,20 @@ type Transaction struct {
 }
 
 func NewTransaction(typeID uint, sourceID, targetID uuid.UUID, amount decimal.Decimal) Transaction {
+	var source, target Account
+	if sourceID != uuid.Nil {
+		source.SetID(sourceID)
+	}
+	if targetID != uuid.Nil {
+		target.SetID(targetID)
+	}
 	return Transaction{
+		Type: TransactionType{
+			ID: typeID,
+		},
+		Amount:       amount,
+		Source:       source,
+		Target:       target,
 		CreationDate: time.Now(),
 	}
 }
@@ -92,9 +105,13 @@ func (t *Transaction) IsDeposit() bool {
 }
 
 func (t *Transaction) IsWithdraw() bool {
-	return t.Type.ID == Deposit.ID
+	return t.Type.ID == Withdraw.ID
 }
 
 func (t *Transaction) IsTransfer() bool {
-	return t.Type.ID == Deposit.ID
+	return t.Type.ID == Transfer.ID
+}
+
+func (t *Transaction) SetType(typeID uint) {
+	t.Type = transactionTypeMap[typeID]
 }

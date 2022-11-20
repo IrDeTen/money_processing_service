@@ -66,8 +66,8 @@ func (r *Repository) CreateAccount(account models.Account) (id uuid.UUID, err er
 			err)
 		return
 	}
-	query := `INSERT INTO accounts(client_id, currency_id, ballance) 
-					Values(:client_id, :currency_id, :ballance) 
+	query := `INSERT INTO accounts(client_id, currency_id, balance) 
+					Values(:client_id, :currency_id, :balance) 
 				RETURNING id`
 	prep, err := r.db.PrepareNamed(query)
 	if err != nil {
@@ -95,7 +95,9 @@ func (r *Repository) CreateAccount(account models.Account) (id uuid.UUID, err er
 
 func (r *Repository) GetAccountByID(accountID uuid.UUID) (account models.Account, err error) {
 	var dbAccount dbAccount
-	query := "SELECT * FROM accounts WHERE id=$1"
+	query := `SELECT A.*, C.code AS currency_code FROM accounts AS A 
+				JOIN currencies AS C ON C.id = A.currency_id
+			WHERE A.id =$1`
 	if err = r.db.Get(&dbAccount, query, accountID); err != nil {
 		logger.LogError(
 			"get account",
@@ -105,12 +107,15 @@ func (r *Repository) GetAccountByID(accountID uuid.UUID) (account models.Account
 			err)
 		return
 	}
+	account = r.converter.AccountToModel(dbAccount)
 	return
 }
 
 func (r *Repository) GetAccountsByClientID(clientID uuid.UUID) (accounts []models.Account, err error) {
 	dbAccounts := make([]dbAccount, 0)
-	query := "SELECT * FROM accounts WHERE client_id=$1"
+	query := `SELECT A.*, C.code AS currency_code FROM accounts AS A 
+				JOIN currencies AS C ON C.id = A.currency_id
+			WHERE A.client_id =$1`
 	if err = r.db.Select(&dbAccounts, query, clientID); err != nil {
 		logger.LogError(
 			"get accounts by client's id",
@@ -186,7 +191,7 @@ func (r *Repository) updateBalance(tx *sqlx.Tx, account models.Account) (err err
 func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transaction) (id uuid.UUID, err error) {
 	dbTA := r.converter.TransactionFromModel(transaction)
 	query := `INSERT INTO transactions(type_id, source_id, target_id, amount, creation_date) 
-				Values(:type_id, :source_id, :target_id, :amount, :creation_date) 
+				VALUES(:type_id, :source_id, :target_id, :amount, :creation_date)
 			RETURNING id`
 	prep, err := r.db.PrepareNamed(query)
 	if err != nil {
@@ -195,7 +200,7 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 			"app/repo/postgres/repo",
 			"writeTransaction",
 			fmt.Sprintf("transaction type id: %d, source account id: %s, target account id: %s",
-				dbTA.TypeID, dbTA.SourceID.String(), dbTA.TargetID.String()),
+				dbTA.TypeID, dbTA.SourceID, dbTA.TargetID),
 			err)
 		tx.Rollback()
 		return
@@ -207,7 +212,7 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 			"app/repo/postgres/repo",
 			"writeTransaction",
 			fmt.Sprintf("transaction type id: %d, source account id: %s, target account id: %s",
-				dbTA.TypeID, dbTA.SourceID.String(), dbTA.TargetID.String()),
+				dbTA.TypeID, dbTA.SourceID, dbTA.TargetID),
 			err)
 		tx.Rollback()
 		return
@@ -215,9 +220,10 @@ func (r *Repository) writeTransaction(tx *sqlx.Tx, transaction models.Transactio
 	return
 }
 
+
 func (r *Repository) GetTransactionsByAccount(accountID uuid.UUID) (transactions []models.Transaction, err error) {
 	dbTAList := make([]dbTransaction, 0)
-	query := "SELECT * transactions WHERE source_id = $1 OR target_id = $1"
+	query := "SELECT * FROM transactions WHERE source_id = $1 OR target_id = $1"
 	err = r.db.Select(&dbTAList, query, accountID)
 	if err != nil {
 		logger.LogError(

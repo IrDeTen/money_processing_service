@@ -9,7 +9,7 @@ import (
 type converter struct{}
 
 type newClient struct {
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 func (c converter) ClientToModel(client newClient) models.Client {
