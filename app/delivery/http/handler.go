@@ -27,7 +27,13 @@ func (h *Handler) CreateClient(c *gin.Context) {
 		return
 	}
 
-	id, err := h.uc.CreateClient(h.converter.ClientToModel(client))
+	mClient, err := h.converter.ClientToModel(client)
+	if err != nil {
+		h.errResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := h.uc.CreateClient(mClient)
 	if err != nil {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return

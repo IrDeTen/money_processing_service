@@ -147,7 +147,6 @@ func (r *Repository) GetCurrencyByID(currencyID uint) (currency models.Currency,
 	}
 	currency = r.converter.CurrencyToModel(curr)
 	return
-
 }
 
 // Updating the balances of the specified accounts and creating a record of the transaction in the database

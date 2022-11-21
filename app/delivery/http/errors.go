@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	errClietnEmptyName  = errors.New("client name is empty")
 	errInvalidAccountID = errors.New("invalid account ID")
 )
 

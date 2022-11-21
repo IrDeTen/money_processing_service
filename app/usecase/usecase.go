@@ -80,7 +80,6 @@ func (u *Usecase) CreateTransaction(transaction models.Transaction) (transaction
 
 	default:
 		return uuid.Nil, errInvalidTransactionType
-
 	}
 
 	return u.repo.CreateTransaction(transaction, accounts...)

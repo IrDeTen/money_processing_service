@@ -12,8 +12,12 @@ type newClient struct {
 	Name string `json:"name,omitempty"`
 }
 
-func (c converter) ClientToModel(client newClient) models.Client {
-	return models.CreateNewClient(client.Name)
+func (c converter) ClientToModel(client newClient) (models.Client, error) {
+	if len(client.Name) > 0{
+		mClient := models.CreateNewClient(client.Name)
+		return mClient, nil
+	}
+	return models.Client{}, errClietnEmptyName
 }
 
 type outClient struct {
