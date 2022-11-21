@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  db:
+    container_name: processing_db
+    image: postgres:latest
+    restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=processing
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - processing_service
+
+  admin:
+    container_name: processing_db_web_adminer
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8090:8080
+    networks:
+      - processing_service
+
+  app:
+    container_name: processing_app
+    build: .
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8888:8888
+    networks:
+      - processing_service
+
+networks:
+  processing_service:
