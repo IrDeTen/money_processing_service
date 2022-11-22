@@ -15,7 +15,6 @@ import (
 	apphttp "github.com/IrDeTen/money_processing_service.git/app/delivery/http"
 	appRepo "github.com/IrDeTen/money_processing_service.git/app/repo/postgresql"
 	appUC "github.com/IrDeTen/money_processing_service.git/app/usecase"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -51,11 +50,8 @@ func (a *App) Run(port string) error {
 		gin.Recovery(),
 	)
 
-	if viper.GetBool("app.client.use") {
-		router.Use(static.Serve("/", static.LocalFile(viper.GetString("app.client.dir"), true)))
-	}
-
-	apphttp.RegisterHTTPEndpoints(router, a.uc)
+	apiRouter := router.Group("/processing")
+	apphttp.RegisterHTTPEndpoints(apiRouter, a.uc)
 
 	a.httpServer = &http.Server{
 		Addr:           ":" + port,

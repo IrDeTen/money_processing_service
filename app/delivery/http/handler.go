@@ -19,6 +19,16 @@ func NewHandler(uc app.IUsecase) *Handler {
 	}
 }
 
+// CreateClient godoc
+// @Summary 		Creating new client
+// @Description  	Create new client with specified name
+// @Accept       	json
+// @Produce      	json
+// @Param 			input body newClient true "Name for the client"
+// @Success 		200 {string} string "New client UUID" 
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/client [post]
 func (h *Handler) CreateClient(c *gin.Context) {
 	var client newClient
 
@@ -38,9 +48,17 @@ func (h *Handler) CreateClient(c *gin.Context) {
 		h.errResponse(c, http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{"client_id": id.String()})
+	c.JSON(http.StatusOK, map[string]interface{}{"client_id": id})
 }
 
+// GetClient godoc
+// @Summary 		Retrieves client based on given ID 
+// @Produce      	json
+// @Param 			id path string true "Client UUID"
+// @Success 		200 {object} outClient  
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/client/{id} [get]
 func (h *Handler) GetClient(c *gin.Context) {
 	clientID := c.Param("client_id")
 	id, err := uuid.Parse(clientID)
@@ -59,6 +77,16 @@ func (h *Handler) GetClient(c *gin.Context) {
 
 }
 
+// CreateAccount godoc
+// @Summary 		Creating new account
+// @Description  	Create account with the specified currency for the client
+// @Accept       	json
+// @Produce      	json
+// @Param 			input body newAccount true "Account Data"
+// @Success 		200 {string} string "New account UUID" 
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/account [post]
 func (h *Handler) CreateAccount(c *gin.Context) {
 	var newAcc newAccount
 
@@ -80,6 +108,14 @@ func (h *Handler) CreateAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{"account_id": id.String()})
 }
 
+// GetAccount godoc
+// @Summary 		Retrieves account based on given ID 
+// @Produce      	json
+// @Param 			id path string true "Account UUID"
+// @Success 		200 {object} outAccount 
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/account/{id} [get]
 func (h *Handler) GetAccount(c *gin.Context) {
 	accountID := c.Param("account_id")
 	id, err := uuid.Parse(accountID)
@@ -97,6 +133,16 @@ func (h *Handler) GetAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{"account": outAcc})
 }
 
+// CreateAccount godoc
+// @Summary 		Creating transaction
+// @Description  	Create transaction based on transaction type, account IDs and transaction amount
+// @Accept       	json
+// @Produce      	json
+// @Param 			input body newTransaction true "Transaction data"
+// @Success 		200 {string} string "New transaction UUID" 
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/transaction [post]
 func (h *Handler) CreateTransaction(c *gin.Context) {
 	var t newTransaction
 	if err := c.BindJSON(&t); err != nil {
@@ -117,6 +163,14 @@ func (h *Handler) CreateTransaction(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{"transaction_id": id.String()})
 }
 
+// GetTransactions godoc
+// @Summary 		Retrieves transactions list based on given account ID 
+// @Produce      	json
+// @Param 			id path string true "Account UUID"
+// @Success 		200 {array} outTransaction 
+// @Failure 		400 {object} errResponse
+// @Failure 		500 {object} errResponse
+// @Router 			/transaction/{id} [get]
 func (h *Handler) GetTransactions(c *gin.Context) {
 	accountID := c.Param("account_id")
 	id, err := uuid.Parse(accountID)

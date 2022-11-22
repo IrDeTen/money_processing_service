@@ -1,0 +1,240 @@
+basePath: /processing
+definitions:
+  http.errResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  http.newAccount:
+    properties:
+      client_id:
+        type: string
+      currency_id:
+        type: integer
+    type: object
+  http.newClient:
+    properties:
+      name:
+        type: string
+    type: object
+  http.newTransaction:
+    properties:
+      amount:
+        type: number
+      source_id:
+        type: string
+      target_id:
+        type: string
+      type_id:
+        type: integer
+    type: object
+  http.outAccount:
+    properties:
+      balance:
+        type: number
+      currency:
+        $ref: '#/definitions/http.outCurrency'
+      id:
+        type: string
+    type: object
+  http.outClient:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/http.outAccount'
+        type: array
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  http.outCurrency:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+    type: object
+  http.outTransaction:
+    properties:
+      amount:
+        type: number
+      date:
+        type: string
+      id:
+        type: string
+      source_id:
+        type: string
+      target_id:
+        type: string
+      type:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Test task
+  title: Money Processing Service API
+  version: "1.0"
+paths:
+  /account:
+    post:
+      consumes:
+      - application/json
+      description: Create account with the specified currency for the client
+      parameters:
+      - description: Account Data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/http.newAccount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New account UUID
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Creating new account
+  /account/{id}:
+    get:
+      parameters:
+      - description: Account UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.outAccount'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Retrieves account based on given ID
+  /client:
+    post:
+      consumes:
+      - application/json
+      description: Create new client with specified name
+      parameters:
+      - description: Name for the client
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/http.newClient'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New client UUID
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Creating new client
+  /client/{id}:
+    get:
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.outClient'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Retrieves client based on given ID
+  /transaction:
+    post:
+      consumes:
+      - application/json
+      description: Create transaction based on transaction type, account IDs and transaction
+        amount
+      parameters:
+      - description: Transaction data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/http.newTransaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New transaction UUID
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Creating transaction
+  /transaction/{id}:
+    get:
+      parameters:
+      - description: Account UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/http.outTransaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.errResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/http.errResponse'
+      summary: Retrieves transactions list based on given account ID
+swagger: "2.0"
