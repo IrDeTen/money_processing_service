@@ -26,6 +26,7 @@ services:
       - processing_service
 
   app:
+    image: irdeten/money_processing_service-app
     container_name: processing_app
     build: .
     restart: always
